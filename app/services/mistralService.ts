@@ -1,35 +1,168 @@
-import axios from 'axios';
+import { prestationService } from './prestationService';
 
 export interface MistralResponse {
   response: string;
+  prestations: any[];
 }
 
 export interface MistralError {
   error: string;
 }
 
-export async function analyzePhotos(photos: File[], prompt: string): Promise<MistralResponse> {
-  try {
-    const formData = new FormData();
-    formData.append('prompt', prompt);
-    
-    // Ajouter chaque photo au FormData
-    photos.forEach((photo) => {
-      formData.append('photos', photo);
-    });
-    
-    // Appeler notre API
-    const response = await axios.post('/api/mistral', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
+// Prompt prédéfini à utiliser pour toutes les analyses (invisible pour l'utilisateur)
+const DEFAULT_PROMPT = `Tu es un assistant spécialisé dans l'analyse d'images de flyers de prestations de beauté. Ta tâche est d'extraire les informations et de les formater en JSON.
+
+IMPORTANT: Tu dois UNIQUEMENT répondre avec un objet JSON valide, sans aucun texte avant ou après. Le format doit être exactement :
+{
+  "prestations": [
+    {
+      "category": "femmes",
+      "type": "prestation",
+      "name": "Nom de la prestation",
+      "price": "30",
+      "startingPrice": false,
+      "duration": {
+        "hours": 0,
+        "minutes": 30
       },
-    });
-    
-    return response.data;
-  } catch (error) {
-    if (axios.isAxiosError(error) && error.response) {
-      throw error.response.data as MistralError;
+      "description": "Description si disponible"
     }
-    throw { error: 'Une erreur est survenue lors de l\'analyse des photos' };
+  ]
+}
+
+Règles à suivre strictement :
+- Utilise uniquement "femmes", "hommes" ou "enfants" pour category
+- Utilise uniquement "prestation" ou "forfait" pour type
+- Pour les prix variables (ex: 30-50€), mets le prix minimum dans price et startingPrice à true
+- Mets les durées en nombres (pas de texte)
+- Si une information est manquante, utilise une valeur par défaut (0 pour les nombres, "" pour les textes)
+- NE PAS ajouter de texte explicatif, UNIQUEMENT le JSON`;
+
+export async function analyzePhotos(photos: File[], prompt: string = DEFAULT_PROMPT): Promise<MistralResponse> {
+  const apiKey = process.env.NEXT_PUBLIC_MISTRAL_API_KEY;
+  if (!apiKey) {
+    throw new Error('La clé API Mistral n\'est pas configurée. Veuillez ajouter votre clé API dans le fichier .env.local');
+  }
+
+  // Convertir les photos en base64
+  const photoPromises = photos.map(file => {
+    return new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        resolve(reader.result as string);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  });
+
+  const photoUrls = await Promise.all(photoPromises);
+
+  // Préparer le contenu pour l'API Mistral
+  const messages = [
+    {
+      role: 'user',
+      content: [
+        { type: 'text', text: prompt },
+        ...photoUrls.map(url => ({
+          type: 'image_url',
+          image_url: {
+            url: url
+          }
+        }))
+      ]
+    }
+  ];
+
+  const requestBody = {
+    model: 'pixtral-large-latest',
+    messages
+  };
+
+  console.log('Envoi à l\'API Mistral:', requestBody);
+
+  try {
+    console.log('Envoi de la requête à Mistral...');
+    const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(requestBody)
+    });
+
+    console.log('Statut de la réponse:', response.status, response.statusText);
+    const responseData = await response.text();
+    console.log('Réponse brute:', responseData);
+
+    if (!response.ok) {
+      console.error('Erreur de l\'API Mistral:', {
+        status: response.status,
+        statusText: response.statusText,
+        response: responseData
+      });
+      throw new Error(`Erreur de l'API Mistral (${response.status}): ${responseData || 'Pas de message d\'erreur'}`);
+    }
+
+    let data;
+    try {
+      data = JSON.parse(responseData);
+    } catch (parseError) {
+      console.error('Erreur lors du parsing de la réponse:', parseError);
+      throw new Error('La réponse de l\'API n\'est pas un JSON valide: ' + (parseError as Error).message);
+    }
+
+    console.log('Réponse parsée:', data);
+
+    if (!data || !data.choices || !data.choices[0]?.message?.content) {
+      console.error('Structure de réponse invalide:', data);
+      throw new Error('Format de réponse invalide de l\'API Mistral');
+    }
+
+    const jsonResponse = data.choices[0].message.content;
+    console.log('Contenu de la réponse brute:', jsonResponse);
+
+    try {
+      // Nettoyer la réponse avant le parsing
+      const cleanedResponse = jsonResponse
+        .trim()  // Enlever les espaces au début et à la fin
+        .replace(/^```json\s*/, '') // Enlever ```json au début si présent
+        .replace(/```$/, '')  // Enlever ``` à la fin si présent
+        .replace(/^\s*```\s*/, '') // Enlever ``` seul au début
+        .replace(/\n/g, ' ') // Remplacer les sauts de ligne par des espaces
+        .trim(); // Nettoyer encore une fois
+
+      console.log('Réponse nettoyée avant parsing:', cleanedResponse);
+      
+      // Parser la réponse JSON
+      const parsedResponse = JSON.parse(cleanedResponse);
+      console.log('Réponse JSON parsée:', parsedResponse);
+      
+      if (!parsedResponse.prestations || !Array.isArray(parsedResponse.prestations)) {
+        throw new Error('Le format de la réponse ne correspond pas à la structure attendue');
+      }
+
+      // Créer les prestations à partir du JSON
+      parsedResponse.prestations.forEach((prestation: any) => {
+        prestationService.addPrestation(prestation, 'flyer');
+      });
+
+      return {
+        response: cleanedResponse,
+        prestations: parsedResponse.prestations
+      };
+    } catch (parseError: unknown) {
+      console.error('Erreur lors du parsing JSON de la réponse:', parseError);
+      if (parseError instanceof Error) {
+        throw new Error('Format de réponse invalide: ' + parseError.message);
+      } else {
+        throw new Error('Format de réponse invalide: erreur inconnue');
+      }
+    }
+  } catch (error) {
+    console.error('Erreur complète:', error);
+    throw error;
   }
 } 

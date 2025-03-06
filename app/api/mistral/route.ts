@@ -44,17 +44,23 @@ export async function POST(request: NextRequest) {
         return {
           type: "image_url",
           image_url: {
-            url: `data:${photo.type};base64,${base64}`,
-          },
+            url: `data:${photo.type};base64,${base64}`
+          }
         };
       })
     );
 
     // Préparer les contenus pour l'API Mistral
-    const content = [
-      { type: "text", text: prompt },
-      ...imageContents
-    ];
+    const messages = [{
+      role: "user",
+      content: [
+        {
+          type: "text",
+          text: prompt
+        },
+        ...imageContents
+      ]
+    }];
 
     // Appeler l'API Mistral directement avec fetch
     const mistralResponse = await fetch('https://api.mistral.ai/v1/chat/completions', {
@@ -65,7 +71,7 @@ export async function POST(request: NextRequest) {
       },
       body: JSON.stringify({
         model: 'pixtral-large-latest',
-        messages: [{ role: 'user', content }],
+        messages: messages,
         max_tokens: 2000,
         temperature: 0.2,
       }),

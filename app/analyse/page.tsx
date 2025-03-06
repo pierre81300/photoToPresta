@@ -1,0 +1,58 @@
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import PhotoSelector from '../components/PhotoSelector';
+import ResponseDisplay from '../components/ResponseDisplay';
+import { analyzePhotos } from '../services/mistralService';
+
+export default function AnalysePage() {
+  const [selectedPhotos, setSelectedPhotos] = useState<File[]>([]);
+  const [response, setResponse] = useState<string>('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+
+  const handleAnalyze = async () => {
+    if (!selectedPhotos.length) {
+      setError('Veuillez sélectionner au moins une photo à analyser');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const result = await analyzePhotos(selectedPhotos);
+      setResponse(result.response);
+      router.push('/');
+    } catch (error) {
+      console.error('Erreur lors de l\'analyse:', error);
+      setError(error instanceof Error ? error.message : 'Une erreur inattendue est survenue lors de l\'analyse');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-4">Analyse de flyer</h1>
+      <PhotoSelector onPhotosSelected={setSelectedPhotos} />
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mt-4" role="alert">
+          <span className="block sm:inline">{error}</span>
+        </div>
+      )}
+      <div className="mt-4">
+        <button
+          onClick={handleAnalyze}
+          disabled={loading || selectedPhotos.length === 0}
+          className={`bg-blue-500 text-white px-4 py-2 rounded ${loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-600'}`}
+        >
+          {loading ? 'Analyse en cours...' : 'Analyser'}
+        </button>
+      </div>
+      {response && <ResponseDisplay response={response} />}
+    </div>
+  );
+} 

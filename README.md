@@ -1,6 +1,6 @@
 # Photo Analyzer avec Mistral AI
 
-Cette application web permet aux utilisateurs de sélectionner des photos depuis leur appareil, de poser une question à leur sujet, et d'obtenir une analyse générée par Mistral AI.
+## Getting Started
 
 ## Fonctionnalités
 
