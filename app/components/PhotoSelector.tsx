@@ -8,19 +8,26 @@ interface PhotoSelectorProps {
 
 export default function PhotoSelector({ onPhotosSelected }: PhotoSelectorProps) {
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
   useEffect(() => {
-    return () => {
-      previewUrls.forEach(url => URL.revokeObjectURL(url));
-    };
-  }, [previewUrls]);
+    if (selectedFiles.length > 0) {
+      const newPreviews = Array.from(selectedFiles).map(file => URL.createObjectURL(file));
+      setPreviewUrls(newPreviews);
+      
+      // Cleanup function
+      return () => {
+        newPreviews.forEach(preview => URL.revokeObjectURL(preview));
+      };
+    }
+  }, [selectedFiles, previewUrls]);
 
   const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       previewUrls.forEach(url => URL.revokeObjectURL(url));
       
       const files = Array.from(e.target.files);
-      onPhotosSelected(files);
+      setSelectedFiles(files);
       
       const urls = files.map(file => URL.createObjectURL(file));
       setPreviewUrls(urls);
