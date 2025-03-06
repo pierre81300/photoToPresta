@@ -14,7 +14,7 @@ export default function ResponseDisplay({ response }: ResponseDisplayProps) {
     console.error('Erreur lors du parsing de la réponse:', error);
     return (
       <div className="mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
-        <p>Erreur l&apos;analyse de la réponse</p>
+        <p>Erreur lors de l&apos;analyse de la réponse</p>
       </div>
     );
   }
