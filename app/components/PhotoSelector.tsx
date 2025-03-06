@@ -12,15 +12,14 @@ export default function PhotoSelector({ onPhotosSelected }: PhotoSelectorProps) 
 
   useEffect(() => {
     if (selectedFiles.length > 0) {
-      const newPreviews = Array.from(selectedFiles).map(file => URL.createObjectURL(file));
-      setPreviewUrls(newPreviews);
+      onPhotosSelected(selectedFiles);
       
-      // Cleanup function
       return () => {
+        const newPreviews = [...previewUrls];
         newPreviews.forEach(preview => URL.revokeObjectURL(preview));
       };
     }
-  }, [selectedFiles, previewUrls]);
+  }, [selectedFiles, previewUrls, onPhotosSelected]);
 
   const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
