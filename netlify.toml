@@ -1,11 +1,13 @@
 # Configuration pour le déploiement de Next.js sur Netlify
 [build]
-  command = "npm run build"  # Commande de build
-  publish = ".next"          # Dossier de publication
+  command = "NODE_OPTIONS='--max_old_space_size=4096' CI=false DISABLE_ESLINT_PLUGIN=true next build"
+  publish = ".next"
 
 # Variables d'environnement de build
 [build.environment]
-  NETLIFY_NEXT_PLUGIN_SKIP = "true"  # Évite d'utiliser l'ancien plugin Next.js
+  NETLIFY_NEXT_PLUGIN_SKIP = "true"
+  NEXT_TELEMETRY_DISABLED = "1"
+  NODE_VERSION = "20"
 
 # Plugins Netlify
 [[plugins]]

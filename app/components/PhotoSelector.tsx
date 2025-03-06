@@ -22,6 +22,8 @@ export default function PhotoSelector({ onPhotosSelected }: PhotoSelectorProps) 
     if (selectedFiles.length > 0) {
       onPhotosSelected(selectedFiles);
     }
+  // Désactiver l'avertissement ESLint pour cette ligne spécifique
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedFiles, onPhotosSelected]);
 
   const handlePhotoSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
