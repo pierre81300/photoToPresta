@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import PhotoSelector from '../components/PhotoSelector';
 import ResponseDisplay from '../components/ResponseDisplay';
 import { analyzePhotos } from '../services/mistralService';
@@ -36,7 +37,16 @@ export default function AnalysePage() {
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Analyse de flyer</h1>
+      <div className="flex items-center mb-6">
+        <Link href="/" className="flex items-center text-purple-600 hover:text-purple-800 mr-4">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          <span className="ml-1">Retour</span>
+        </Link>
+        <h1 className="text-2xl font-bold">Analyse de flyer</h1>
+      </div>
+      
       <PhotoSelector onPhotosSelected={setSelectedPhotos} />
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mt-4" role="alert">

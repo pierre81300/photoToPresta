@@ -118,10 +118,13 @@ export default function ValidationContent({ id }: { id: string }) {
       <div className="max-w-md mx-auto px-4 pt-8">
         <header className="flex justify-between items-center mb-6">
           <div className="flex items-center">
-            <Link href="/" className="mr-4 text-purple-600">
-              <span className="text-purple-600">Retour</span>
+            <Link href="/" className="flex items-center text-purple-600 hover:text-purple-800 mr-4">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              <span className="ml-1">Retour</span>
             </Link>
-            <Image src="/ilea.png" alt="Iléa" width={80} height={40} />
+            <div className="text-xl font-bold">Iléa</div>
           </div>
         </header>
 
