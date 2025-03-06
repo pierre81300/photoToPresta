@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 interface PhotoSelectorProps {
   onPhotosSelected: (photos: File[]) => void;
@@ -10,19 +10,23 @@ export default function PhotoSelector({ onPhotosSelected }: PhotoSelectorProps) 
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
+  // Nettoyer les URLs d'aperçu lorsque le composant est démonté
+  useEffect(() => {
+    return () => {
+      previewUrls.forEach(url => URL.revokeObjectURL(url));
+    };
+  }, [previewUrls]);
+
+  // Informer le parent lorsque des fichiers sont sélectionnés
   useEffect(() => {
     if (selectedFiles.length > 0) {
       onPhotosSelected(selectedFiles);
-      
-      return () => {
-        const newPreviews = [...previewUrls];
-        newPreviews.forEach(preview => URL.revokeObjectURL(preview));
-      };
     }
-  }, [selectedFiles, previewUrls, onPhotosSelected]);
+  }, [selectedFiles, onPhotosSelected]);
 
-  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
+      // Nettoyer les anciens aperçus
       previewUrls.forEach(url => URL.revokeObjectURL(url));
       
       const files = Array.from(e.target.files);
@@ -31,7 +35,7 @@ export default function PhotoSelector({ onPhotosSelected }: PhotoSelectorProps) 
       const urls = files.map(file => URL.createObjectURL(file));
       setPreviewUrls(urls);
     }
-  };
+  }, [previewUrls]);
 
   return (
     <div 

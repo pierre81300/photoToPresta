@@ -1,9 +1,12 @@
+# Configuration pour le déploiement de Next.js sur Netlify
 [build]
-  command = "npm run build"
-  publish = ".next"
+  command = "npm run build"  # Commande de build
+  publish = ".next"          # Dossier de publication
 
+# Variables d'environnement de build
 [build.environment]
-  NETLIFY_NEXT_PLUGIN_SKIP = "true"
+  NETLIFY_NEXT_PLUGIN_SKIP = "true"  # Évite d'utiliser l'ancien plugin Next.js
 
+# Plugins Netlify
 [[plugins]]
-  package = "@netlify/plugin-nextjs" 
+  package = "@netlify/plugin-nextjs"  # Plugin officiel pour Next.js 

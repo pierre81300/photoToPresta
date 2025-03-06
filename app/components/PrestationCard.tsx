@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback } from 'react';
 import Link from 'next/link';
 import { Prestation } from '../services/prestationService';
 
@@ -10,12 +10,23 @@ interface PrestationCardProps {
 }
 
 export default function PrestationCard({ prestation, onDelete }: PrestationCardProps) {
-  const handleDelete = (e: React.MouseEvent) => {
+  const handleDelete = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    
     if (window.confirm('Êtes-vous sûr de vouloir supprimer cette prestation ? Cette action est irréversible.')) {
       onDelete?.(prestation.id);
     }
+  }, [onDelete, prestation.id]);
+
+  const getDurationText = () => {
+    const hasHours = prestation.duration.hours && prestation.duration.hours !== '0' && prestation.duration.hours !== '00';
+    const hasMinutes = prestation.duration.minutes && prestation.duration.minutes !== '0' && prestation.duration.minutes !== '00';
+    
+    if (!hasHours && !hasMinutes) return '';
+    if (hasHours && !hasMinutes) return `${prestation.duration.hours}h`;
+    if (!hasHours && hasMinutes) return `${prestation.duration.minutes}min`;
+    return `${prestation.duration.hours}h${prestation.duration.minutes}min`;
   };
 
   return (
@@ -39,9 +50,13 @@ export default function PrestationCard({ prestation, onDelete }: PrestationCardP
               </span>
             </div>
             <div className="flex items-center gap-2 text-gray-600">
-              <span>{prestation.price}€</span>
-              <span>-</span>
-              <span>{prestation.duration.hours !== '00' ? `${prestation.duration.hours}h` : ''}{prestation.duration.minutes}min</span>
+              <span>{prestation.price}€{prestation.startingPrice ? ' (à partir de)' : ''}</span>
+              {getDurationText() && (
+                <>
+                  <span>-</span>
+                  <span>{getDurationText()}</span>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -52,7 +67,7 @@ export default function PrestationCard({ prestation, onDelete }: PrestationCardP
           >
             Modifier
           </Link>
-          {prestation.status === 'active' && (
+          {prestation.status === 'active' && onDelete && (
             <button
               onClick={handleDelete}
               className="text-red-600 text-sm hover:underline"

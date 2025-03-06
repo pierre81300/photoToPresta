@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { prestationService, Prestation } from './services/prestationService';
@@ -18,21 +18,25 @@ export default function Home() {
     return () => window.removeEventListener('storage', loadPrestations);
   }, []);
 
-  const loadPrestations = () => {
+  const loadPrestations = useCallback(() => {
     const allPrestations = prestationService.getPrestations();
     console.log('Chargement des prestations:', allPrestations);
     setPrestations(allPrestations);
-  };
+  }, []);
 
-  const handleDelete = (id: string) => {
+  const handleDelete = useCallback((id: string) => {
     console.log('Suppression de la prestation:', id);
     prestationService.deletePrestation(id);
     loadPrestations();
-  };
+  }, [loadPrestations]);
 
   const filteredPrestations = prestations
     .filter(p => p.category === selectedCategory)
     .filter(p => !showPendingOnly || p.status === 'pending');
+
+  const handleCategoryChange = useCallback((category: 'femmes' | 'hommes' | 'enfants') => {
+    setSelectedCategory(category);
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -50,7 +54,7 @@ export default function Home() {
           {['femmes', 'hommes', 'enfants'].map((category) => (
             <button
               key={category}
-              onClick={() => setSelectedCategory(category as typeof selectedCategory)}
+              onClick={() => handleCategoryChange(category as typeof selectedCategory)}
               className={`px-6 py-2 rounded-full ${
                 selectedCategory === category
                   ? 'bg-purple-100 text-purple-600'
@@ -77,6 +81,7 @@ export default function Home() {
             <Link
               href="/creation"
               className="bg-purple-600 text-white w-8 h-8 rounded-full flex items-center justify-center hover:bg-purple-700 transition-colors"
+              aria-label="Créer une prestation"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -104,13 +109,19 @@ export default function Home() {
         </div>
 
         <div className="space-y-3">
-          {filteredPrestations.map((prestation) => (
-            <PrestationCard
-              key={prestation.id}
-              prestation={prestation}
-              onDelete={handleDelete}
-            />
-          ))}
+          {filteredPrestations.length > 0 ? (
+            filteredPrestations.map((prestation) => (
+              <PrestationCard
+                key={`${prestation.id}-${prestation.name}`}
+                prestation={prestation}
+                onDelete={handleDelete}
+              />
+            ))
+          ) : (
+            <p className="text-center text-gray-500 py-4">
+              Aucune prestation trouvée dans cette catégorie.
+            </p>
+          )}
         </div>
 
         <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200">

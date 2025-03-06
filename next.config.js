@@ -8,7 +8,7 @@ const nextConfig = {
       },
     ],
   },
-  // Ajout de la configuration pour les API routes
+  // Configuration des API routes
   async rewrites() {
     return [
       {
@@ -17,12 +17,12 @@ const nextConfig = {
       },
     ];
   },
+  // Désactiver les vérifications ESLint pendant le build pour éviter les problèmes de déploiement
   eslint: {
-    // Désactive les vérifications ESLint pendant le build pour éviter les problèmes de déploiement
     ignoreDuringBuilds: true,
   },
+  // Désactiver les vérifications TypeScript pendant le build 
   typescript: {
-    // Désactive les vérifications TypeScript pendant le build 
     ignoreBuildErrors: true,
   },
 };
