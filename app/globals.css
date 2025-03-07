@@ -1,32 +1,105 @@
 @import "tailwindcss";
 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 @theme {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
+  --primary: #7c3aed;
+  --primary-hover: #6d28d9;
+  --secondary: #e9d5ff;
+  --accent: #c084fc;
+  
+  --background: #f9fafb;
+  --foreground: #111827;
+  
+  --card: #ffffff;
+  --card-foreground: #111827;
+  
+  --border: #e5e7eb;
+  --input: #e5e7eb;
+  
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
+  
+  --radius: 0.5rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
-  }
+.dark {
+  --primary: #8b5cf6;
+  --primary-hover: #7c3aed;
+  --secondary: #4c1d95;
+  --accent: #a855f7;
+  
+  --background: #111827;
+  --foreground: #f9fafb;
+  
+  --card: #1f2937;
+  --card-foreground: #f3f4f6;
+  
+  --border: #374151;
+  --input: #374151;
+  
+  --success: #059669;
+  --warning: #d97706;
+  --error: #dc2626;
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Composants personnalisés */
+@layer components {
+  .btn {
+    @apply px-4 py-2 rounded-full text-white transition-colors;
+    background-color: var(--primary);
+  }
+  
+  .btn:hover {
+    background-color: var(--primary-hover);
+  }
+  
+  .btn-secondary {
+    @apply px-4 py-2 rounded-full transition-colors;
+    color: var(--primary);
+    background-color: var(--secondary);
+  }
+  
+  .btn-secondary:hover {
+    color: var(--foreground);
+    background-color: var(--accent);
+  }
+  
+  .card {
+    @apply rounded-lg shadow-md p-4;
+    background-color: var(--card);
+    color: var(--card-foreground);
+    border: 1px solid var(--border);
+  }
+  
+  .input {
+    @apply px-4 py-2 rounded-lg;
+    background-color: var(--background);
+    color: var(--foreground);
+    border: 1px solid var(--input);
+  }
+  
+  .input:focus {
+    @apply outline-none;
+    border-color: var(--primary);
+  }
 }
 
 /* Styles pour la barre de défilement personnalisée */
@@ -35,17 +108,17 @@ body {
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: var(--background);
   border-radius: 10px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #888;
+  background: var(--border);
   border-radius: 10px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #555;
+  background: var(--primary);
 }
 
 @media (prefers-color-scheme: dark) {
